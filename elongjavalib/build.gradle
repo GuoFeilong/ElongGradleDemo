@@ -1,0 +1,16 @@
+apply plugin: 'java'
+
+task makeJar(type: Copy) {
+    delete 'build/libs/elongtime.jar'
+    from('build/intermediates/bundles/release/')
+    into('build/libs/')
+    include('classes.jar')
+    rename('classes.jar', 'elongtime.jar')
+}
+makeJar.dependsOn(build)
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+}
+
+sourceCompatibility = "1.7"
+targetCompatibility = "1.7"

@@ -1,0 +1,104 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 24
+    buildToolsVersion "24.0.2"
+
+    //执行lint检查，有任何的错误或者警告提示，都会终止构建，我们可以将其关掉。
+    lintOptions {
+        abortOnError false
+    }
+    // 签名配置
+    signingConfigs {
+        config {
+            keyAlias 'myelong'
+            keyPassword 'myelong'
+            storeFile file('elongmydemo.jks')
+            storePassword 'myelong'
+        }
+    }
+
+
+    defaultConfig {
+        applicationId "com.elong.elonggradledemo"
+        minSdkVersion 16
+        targetSdkVersion 24
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        signingConfig signingConfigs.config
+        multiDexEnabled true
+
+    }
+    // 多渠道配置
+    productFlavors {
+        xiaomi {
+            resValue "string", "build_host", project.ANDROID_BUILD_URL_DEVELOP
+            manifestPlaceholders = [ASIA_TRAVEL_VALUE: name, BUILD_TIME_VALUE: releaseTime() + "", FIR_CHANGE_LOG_VALUE: project.ANDROID_BUILD_URL_DEVELOP]
+        }
+
+        yingyongbao {
+            resValue "string", "build_host", project.ANDROID_BUILD_URL_QA
+            manifestPlaceholders = [ASIA_TRAVEL_VALUE: name, BUILD_TIME_VALUE: releaseTime() + "", FIR_CHANGE_LOG_VALUE: project.ANDROID_BUILD_URL_QA]
+        }
+        huawei {
+            resValue "string", "build_host", project.ANDROID_BUILD_URL_PREMAPI
+            manifestPlaceholders = [ASIA_TRAVEL_VALUE: name, BUILD_TIME_VALUE: releaseTime() + "", FIR_CHANGE_LOG_VALUE: project.ANDROID_BUILD_URL_PREMAPI]
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            zipAlignEnabled true
+            shrinkResources true
+            signingConfig signingConfigs.config
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            minifyEnabled true
+            zipAlignEnabled false
+            shrinkResources false
+            signingConfig signingConfigs.config
+        }
+        // 打包输出配置
+        applicationVariants.all { variant ->
+            variant.outputs.each { output ->
+                def outputFile = output.outputFile
+                if (outputFile != null && outputFile.name.endsWith('.apk')) {
+                    def fileName = "myelong_v${defaultConfig.versionName}_${variant.productFlavors[0].name}_${variant.buildType.name}_${releaseTime()}.apk"
+                    output.outputFile = new File(outputFile.parent + "/${variant.buildType.name}", fileName)
+                }
+
+            }
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+}
+
+// 打包的时间
+def releaseTime() {
+    return new Date().format("yyyy-MM-dd-HH:mm")
+}
+
+// 引用本地lib
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    compile 'com.android.support:appcompat-v7:24.2.1'
+    compile 'com.android.support:design:24.2.1'
+    testCompile 'junit:junit:4.12'
+    compile project(':elongaarlib')
+    compile project(':elongjavalib')
+}
